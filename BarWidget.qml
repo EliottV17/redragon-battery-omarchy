@@ -71,8 +71,19 @@ Panel {
            "Status:  " + statusStr
   }
 
+  function resetInvalidState(errorMessage) {
+    root.batteryValid = false
+    root.percentage = 0
+    root.voltageMv = 0
+    root.isCharging = false
+    if (errorMessage) root.lastError = errorMessage
+  }
+
   function handleProcessOutput(rawText) {
-    if (!rawText || rawText.trim() === "") return
+    if (!rawText || rawText.trim() === "") {
+      root.resetInvalidState("No output from battery reader")
+      return
+    }
     try {
       var data = JSON.parse(rawText.trim())
       root.deviceConnected = data.connected === true
@@ -87,12 +98,11 @@ Panel {
         root.ticker++
       } else {
         // Prevent carrying stale readings into current state
-        root.percentage = 0
-        root.voltageMv = 0
-        root.isCharging = false
+        root.resetInvalidState(data.error || "")
       }
     } catch (e) {
       console.warn("[local.redragon-battery] Error parsing response:", e, rawText)
+      root.resetInvalidState("Malformed JSON response")
     }
   }
 
@@ -113,6 +123,11 @@ Panel {
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: root.handleProcessOutput(text)
+    }
+    onExited: function(exitCode) {
+      if (exitCode !== 0) {
+        root.resetInvalidState("Reader process exited with code " + exitCode)
+      }
     }
   }
 

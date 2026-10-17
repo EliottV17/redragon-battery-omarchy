@@ -86,12 +86,24 @@ Because Omarchy's `omarchy plugin add` operates purely within unprivileged user 
 #### Why priority 69 (`69-redragon-battery.rules`)?
 In systemd-udev, `70-uaccess.rules` tags devices and `73-seat-late.rules` runs the `uaccess` builtin that grants filesystem ACLs to the logged-in graphical user. Placing the rule at priority `69` ensures the `TAG+="uaccess"` is attached before `70-uaccess.rules` and `73-seat-late.rules` execute.
 
-#### Resolving Previous / Legacy Rules
-If you previously installed manual rules such as `70-redragon-battery.rules` or `99-redragon-battery.rules`, inspect them to confirm they belong to this device, then remove them to prevent duplicate rule evaluation:
-```bash
-sudo rm -f /etc/udev/rules.d/70-redragon-battery.rules /etc/udev/rules.d/99-redragon-battery.rules
-sudo udevadm control --reload-rules && sudo udevadm trigger
-```
+#### Checking for Previous or Duplicate Rules
+If you previously configured rules manually under different priorities (such as `70-` or `99-`), verify whether any exist before removing them:
+
+1. **List existing Redragon rules:**
+   ```bash
+   ls -l /etc/udev/rules.d/*redragon*.rules 2>/dev/null
+   ```
+
+2. **Inspect the file contents** to confirm it specifically configures this mouse (`3554:f55d` / `3554:f55e`):
+   ```bash
+   cat /etc/udev/rules.d/<rule-file-name>
+   ```
+
+3. **Remove only confirmed duplicate files** individually to keep rule evaluation clean:
+   ```bash
+   sudo rm /etc/udev/rules.d/<specific-legacy-rule>.rules
+   sudo udevadm control --reload-rules && sudo udevadm trigger
+   ```
 
 ---
 
