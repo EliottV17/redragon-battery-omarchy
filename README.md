@@ -63,7 +63,7 @@ Tested and verified on:
 Run the official Omarchy command to clone, validate, and enable the plugin:
 
 ```bash
-omarchy plugin add https://github.com/<your-username>/redragon-battery-omarchy.git --enable
+omarchy plugin add https://github.com/EliottV17/redragon-battery-omarchy.git --enable
 ```
 
 Omarchy will clone the repository into `~/.config/omarchy/plugins/local.redragon-battery`, validate its `manifest.json`, register it in the shell catalog, and place it on your status bar.
