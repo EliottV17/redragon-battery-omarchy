@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "local.redragon-battery",
+  "name": "Redragon M916 Pro Battery",
+  "version": "1.0.0",
+  "author": "eliott",
+  "license": "MIT",
+  "description": "Native battery and telemetry indicator for Redragon M916 Pro 1K mouse in Omarchy",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Redragon Battery",
+    "description": "Battery telemetry indicator for Redragon M916 Pro 1K mouse",
+    "category": "Peripherals",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}

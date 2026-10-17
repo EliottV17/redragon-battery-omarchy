@@ -1,0 +1,23 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local backups and editor artifacts
+*.bak
+*.bak.*
+*.orig
+*~
+.directory
+
+# Distribution & release archives
+*.zip
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+dist/
+build/
+
+# OS junk
+.DS_Store
+Thumbs.db

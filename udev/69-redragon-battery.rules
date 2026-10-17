@@ -1,0 +1,11 @@
+# Managed by redragon-battery-omarchy
+# Redragon M916 Pro 1K Gaming Mouse - Non-root HID raw permissions
+# Placed at priority 69 so TAG+="uaccess" is attached before 70-uaccess.rules and 73-seat-late.rules.
+# Grants read/write access to the active seat user via systemd-uaccess ACLs.
+# Does NOT use insecure 0666 world-accessible permissions.
+
+# 2.4GHz Wireless Dongle (3554:f55d)
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="f55d", TAG+="uaccess"
+
+# Direct USB Cable Connection (3554:f55e)
+KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="3554", ATTRS{idProduct}=="f55e", TAG+="uaccess"
