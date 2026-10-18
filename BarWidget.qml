@@ -25,6 +25,21 @@ Panel {
   property var lastValidDate: null
   property int ticker: 0
 
+  // Polling interval policy:
+  // - 60s when telemetry is healthy and valid
+  // - 5s fast retry when dongle is connected but mouse is asleep / telemetry invalid
+  // - 30s conservative interval when completely disconnected
+  readonly property int pollInterval: {
+    if (!deviceConnected) return 30000
+    if (!batteryValid) return 5000
+    return 60000
+  }
+
+  onPollIntervalChanged: {
+    pollTimer.interval = root.pollInterval
+    pollTimer.restart()
+  }
+
   // High-contrast, theme-integrated text and surface tokens for the popup
   readonly property color popupTextColor: Color.popups.text
   readonly property color popupBgColor: Color.background
@@ -116,24 +131,46 @@ Panel {
   implicitWidth: button.implicitWidth
   implicitHeight: button.implicitHeight
 
+  // Safety watchdog: cancels batteryProc if an OS read ever stalls longer than 3 seconds
+  Timer {
+    id: stallWatchdog
+    interval: 3000
+    repeat: false
+    onTriggered: {
+      if (batteryProc.running) {
+        console.warn("[local.redragon-battery] Watchdog stopping stalled process")
+        batteryProc.running = false
+      }
+    }
+  }
+
   Process {
     id: batteryProc
     command: ["python3", root.scriptPath]
     running: false
+    onRunningChanged: {
+      if (running) {
+        stallWatchdog.restart()
+      } else {
+        stallWatchdog.stop()
+      }
+    }
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: root.handleProcessOutput(text)
     }
     onExited: function(exitCode) {
+      stallWatchdog.stop()
       if (exitCode !== 0) {
         root.resetInvalidState("Reader process exited with code " + exitCode)
       }
     }
   }
 
-  // Periodic hardware poll every 60 seconds
+  // Adaptive polling timer: 60s when valid, 5s fast retry when mouse is asleep
   Timer {
-    interval: 60000
+    id: pollTimer
+    interval: root.pollInterval
     running: true
     repeat: true
     triggeredOnStart: true

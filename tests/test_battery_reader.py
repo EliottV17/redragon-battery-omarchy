@@ -203,6 +203,55 @@ class TestRedragonBatteryReader(unittest.TestCase):
         self.assertEqual(info["percentage"], 30)
         self.assertFalse(info["is_charging"])
 
+    @patch("redragon_battery.os.access")
+    @patch("redragon_battery.query_node")
+    @patch("redragon_battery.find_redragon_devices")
+    def test_sleep_timeout_and_auto_recovery_sequence(self, mock_find, mock_query, mock_access):
+        """
+        Simulates the full sleep and wake-up cycle:
+        1. Mouse awake -> valid telemetry (60s poll)
+        2. Mouse enters sleep -> returns Timeout (triggers 5s retry policy)
+        3. Mouse wakes up -> next retry succeeds immediately with fresh telemetry
+        4. State is healthy again.
+        """
+        mock_access.return_value = True
+        mock_find.return_value = [
+            {"node": "/dev/hidraw1", "pid": "f55d", "type": "wireless", "interface": 1},
+        ]
+
+        # Step 1: Mouse is awake
+        mock_query.return_value = {
+            "valid": True,
+            "percentage": 30,
+            "is_charging": False,
+            "voltage_mv": 3688,
+            "voltage_v": 3.69
+        }
+        step1 = get_battery_info()
+        self.assertTrue(step1["valid"])
+        self.assertEqual(step1["percentage"], 30)
+
+        # Step 2: Mouse goes to sleep (RF radio off -> Timeout)
+        mock_query.return_value = {"error": "Timeout"}
+        step2 = get_battery_info()
+        self.assertTrue(step2["connected"])
+        self.assertFalse(step2["valid"])
+        self.assertIsNone(step2["percentage"])
+        self.assertEqual(step2["error"], "Timeout")
+
+        # Step 3: Mouse wakes up upon movement
+        mock_query.return_value = {
+            "valid": True,
+            "percentage": 30,
+            "is_charging": False,
+            "voltage_mv": 3688,
+            "voltage_v": 3.69
+        }
+        step3 = get_battery_info()
+        self.assertTrue(step3["valid"])
+        self.assertEqual(step3["percentage"], 30)
+        self.assertIsNone(step3["error"])
+
     def test_cli_execution_with_test_packet(self):
         """Validates CLI execution and JSON output parsing with --test-packet"""
         script = os.path.join(PROJECT_ROOT, "redragon_battery.py")

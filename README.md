@@ -41,9 +41,10 @@ Tested and verified on:
   * Uses active Omarchy theme colors at rest, hover, and press.
   * Urgent alert color (red) is displayed **strictly** when battery level is critical (≤ 5% and discharging).
   * Automatically hides when the mouse/dongle is completely disconnected.
-* **Asynchronous Architecture with Bounded Timeouts:**
+* **Asynchronous Architecture with Bounded Timeouts & Adaptive Recovery:**
   * Powered by Quickshell's asynchronous `Process` engine with bounded per-node timeouts (~0.4s).
-  * Limits candidate queries to the vendor control interface (Interface 1), avoiding interface stalls.
+  * Adaptive polling intervals: runs every 60 seconds when telemetry is valid and switches to a 5-second fast retry interval while the dongle is connected but the mouse is asleep. Upon waking the mouse, telemetry recovers automatically within seconds and the timer returns to 60s.
+  * Internal watchdog cancels stalled queries if an OS read ever exceeds 3 seconds.
 
 ---
 
